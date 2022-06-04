@@ -99,8 +99,29 @@ def checkout(request):
 
 @user_passes_test(lambda u: u.groups.filter(name='vendor'))
 def vendor(request):
+
+    if request.user.is_authenticated:
+        customer = request.user
+        order, created = Order.objects.get_or_create(customer=customer, complete=False)
+        cart_items = order.get_cart_items
+    else:
+        order = {'get_cart_total': 0, 'get_cart_items': 0}
+        cart_items = order['get_cart_items']
+
+    if request.user.is_authenticated:
+        if request.POST.get('action') == 'edit':
+            data = request.POST
+            product = Product.objects.get(pk=data["product_id"])
+            product.quantity += int(data["items_added"])
+            product.price = float(data["new_price"])
+            product.save()
+        elif request.POST.get('action') == 'add':
+            data = request.POST
+            Product.objects.update_or_create(name=data['name'], price=float(data['price']), image=data['image'],
+                                             vendor=request.user, quantity=int(data['quantity']))
+
     items = Product.objects.filter(vendor=request.user.id)
-    context = {'items': items}
+    context = {'items': items, 'cart_items': cart_items}
     return render(request, 'vendor.html', context=context)
 
 

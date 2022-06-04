@@ -34,13 +34,131 @@
                                     <div class="col-md-2 d-flex justify-content-center">
                                         <div>
                                             <p class="small text-muted mb-4 pb-2">Edit</p>
-                                            <button class="btn btn-primary">Edit</button>
+
+                                            <!-- Button trigger modal -->
+                                            <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                                    data-bs-target="#modal{{ item.id }}">
+                                                Edit
+                                            </button>
+
+                                            <!-- Modal -->
+                                            <div class="modal fade" id="modal{{ item.id }}" tabindex="-1"
+                                                 aria-labelledby="modal{{ item.id }}label" aria-hidden="true">
+                                                <div class="modal-dialog modal-lg modal-dialog-centered">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="modal{{ item.id }}label">Modal
+                                                                title</h5>
+                                                            <button type="button" class="btn-close"
+                                                                    data-bs-dismiss="modal"
+                                                                    aria-label="Close"></button>
+                                                        </div>
+                                                        <form method="post">
+                                                            {% csrf_token %}
+                                                            <div class="modal-body">
+                                                                <div class="mb-3 row">
+                                                                    <label for="new_price"
+                                                                           class="col-sm-2 col-form-label">Change&nbsp;price</label>
+                                                                    <div class="col-sm-10">
+                                                                        <input type="text"
+                                                                               class="form-control"
+                                                                               id="new_price" name="new_price">
+                                                                    </div>
+                                                                </div>
+                                                                <div class="mb-3 row">
+                                                                    <label for="items_added"
+                                                                           class="col-sm-2 col-form-label">Add&nbsp;items</label>
+                                                                    <div class="col-sm-10">
+                                                                        <input type="text" class="form-control"
+                                                                               id="items_added" name="items_added">
+                                                                    </div>
+                                                                </div>
+                                                                <input type="hidden" id="product_id" name="product_id"
+                                                                       value={{ item.id }}>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary"
+                                                                        data-bs-dismiss="modal">Close
+                                                                </button>
+                                                                <button type="submit" class="btn btn-primary"
+                                                                        name="action" value="edit">Save
+                                                                    changes
+                                                                </button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             {% endfor %}
                         </div>
+                        <!-- Button trigger modal -->
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                data-bs-target="#modalAdd">
+                            Add new product
+                        </button>
 
+                        <!-- Modal -->
+                        <div class="modal fade" id="modalAdd" tabindex="-1"
+                             aria-labelledby="modalAddLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-lg modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="modalAddLabel">Adding new product</h5>
+                                        <button type="button" class="btn-close"
+                                                data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
+                                    </div>
+                                    <form method="post">
+                                        {% csrf_token %}
+                                        <div class="modal-body">
+                                            <div class="mb-3 row">
+                                                <label for="name"
+                                                       class="col-sm-2 col-form-label">Name</label>
+                                                <div class="col-sm-10">
+                                                    <input type="text"
+                                                           class="form-control"
+                                                           id="name" name="name">
+                                                </div>
+                                            </div>
+                                            <div class="mb-3 row">
+                                                <label for="price"
+                                                       class="col-sm-2 col-form-label">Price</label>
+                                                <div class="col-sm-10">
+                                                    <input type="text" class="form-control"
+                                                           id="price" name="price">
+                                                </div>
+                                            </div>
+                                            <div class="mb-3 row">
+                                                <label for="image"
+                                                       class="col-sm-2 col-form-label">Image</label>
+                                                <div class="col-sm-10">
+                                                    <input type="text" class="form-control"
+                                                           id="image" name="image">
+                                                </div>
+                                            </div>
+                                            <div class="mb-3 row">
+                                                <label for="quantity"
+                                                       class="col-sm-2 col-form-label">Quantity</label>
+                                                <div class="col-sm-10">
+                                                    <input type="text" class="form-control"
+                                                           id="quantity" name="quantity">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">Close
+                                            </button>
+                                            <button type="submit" class="btn btn-primary" name="action" value="add">Add
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
