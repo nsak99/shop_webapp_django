@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <section class="vh-100" style="background-color: #cccccc;">
+        <div class="container h-100">
+            <div class="row d-flex h-100">
+                <div class="col mt-4">
+                    <div class="card mb-4">
+                        <div class="card-body p-4">
+                            {% for item in items %}
+                                <div class="row align-items-center">
+                                    <div class="col-md-2">
+                                        <img src="{{ item.image }}"
+                                             class="img-fluid" alt="Generic placeholder image">
+                                    </div>
+                                    <div class="col-md-2 d-flex justify-content-center">
+                                        <div>
+                                            <p class="small text-muted mb-4 pb-2">Name</p>
+                                            <p class="lead fw-normal mb-0">{{ item.name }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 d-flex justify-content-center">
+                                        <div>
+                                            <p class="small text-muted mb-4 pb-2">Quantity</p>
+                                            <p class="quantity lead fw-normal mb-0">{{ item.quantity }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 d-flex justify-content-center">
+                                        <div>
+                                            <p class="small text-muted mb-4 pb-2">Price</p>
+                                            <p class="lead fw-normal mb-0">${{ item.price|floatformat:2 }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 d-flex justify-content-center">
+                                        <div>
+                                            <p class="small text-muted mb-4 pb-2">Edit</p>
+                                            <button class="btn btn-primary">Edit</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+{% endblock %}

@@ -11286,3 +11286,9 @@ textarea.form-control-lg {
     display: none !important;
   }
 }
+
+.quantity{
+  display: inline-block;
+  font-weight: 700;
+  padding-right:10px;
+}

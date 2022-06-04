@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+    <section class="vh-100" style="background-color: #cccccc;">
+        <div class="container h-100">
+            <div class="row d-flex h-100">
+                <div class="col mt-4">
+                    <p><span class="h2">Shopping Cart </span><span class="h4">({{ order.get_cart_items }} items in your cart)</span>
+                    </p>
+
+                    <div class="card mb-4">
+                        <div class="card-body p-4">
+                            {% for item in items %}
+                                <div class="row align-items-center">
+                                    <div class="col-md-2">
+                                        <img src="{{ item.product.image }}"
+                                             class="img-fluid" alt="Generic placeholder image">
+                                    </div>
+                                    <div class="col-md-2 d-flex justify-content-center">
+                                        <div>
+                                            <p class="small text-muted mb-4 pb-2">Name</p>
+                                            <p class="lead fw-normal mb-0">{{ item.product.name }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 d-flex justify-content-center">
+                                        <div>
+                                            <p class="small text-muted mb-4 pb-2">Quantity</p>
+                                            <p class="quantity lead fw-normal mb-0">{{ item.quantity }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 d-flex justify-content-center">
+                                        <div>
+                                            <p class="small text-muted mb-4 pb-2">Change quantity</p>
+                                            <p class="quantity lead fw-normal mb-0">
+                                            <div class="text-center">
+                                                <i data-product={{ item.product.id }} data-action="add" type="button"
+                                                   class="bi bi-plus-square update-cart"></i>
+                                                <i data-product={{ item.product.id }} data-action="remove" type="button"
+                                                   class="bi bi-dash-square update-cart"></i>
+                                            </div>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 d-flex justify-content-center">
+                                        <div>
+                                            <p class="small text-muted mb-4 pb-2">Price</p>
+                                            <p class="lead fw-normal mb-0">${{ item.product.price|floatformat:2 }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 d-flex justify-content-center">
+                                        <div>
+                                            <p class="small text-muted mb-4 pb-2">Total</p>
+                                            <p class="lead fw-normal mb-0">${{ item.get_total|floatformat:2 }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                    </div>
+
+                    <div class="card mb-5">
+                        <div class="card-body p-4">
+
+                            <div class="float-end">
+                                <p class="mb-0 me-5 d-flex align-items-center">
+                                    <span class="small text-muted me-2">Order total:</span> <span
+                                        class="lead fw-normal">${{ order.get_cart_total|floatformat:2 }}</span>
+                                </p>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-primary btn-lg"
+                                onclick="location.href={% url 'checkout' %}">Checkout
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock content %}
