@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  django:
+    build: .
+    container_name: django
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/usr/src/app/
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=1
+      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 0.0.0.0
+      - CELERY_BROKER=redis://redis:6379/0
+    depends_on:
+      - redis
+  celery_1:
+    build: .
+    command: celery -A shop_webapp worker -l INFO --concurrency=10 -n worker1
+    volumes:
+      - .:/usr/src/app/
+    depends_on:
+      - django
+      - redis
+  celery_2:
+    build: .
+    command: celery -A shop_webapp worker -l INFO --concurrency=10 -n worker2
+    volumes:
+      - .:/usr/src/app/
+    depends_on:
+      - django
+      - redis
+  redis:
+    image: "redis"
