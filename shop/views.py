@@ -1,4 +1,3 @@
-from celery import shared_task
 from django.contrib.auth.decorators import login_required, user_passes_test
 from .models import *
 from django.http import JsonResponse
@@ -9,7 +8,7 @@ from .forms import NewUserForm
 from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.forms import AuthenticationForm
-from .tasks import add, generate_sale_reports, update_item_task
+from .tasks import add
 
 
 def login_request(request):
@@ -138,19 +137,35 @@ def update_item(request):
         action = data['action']
 
         customer = request.user
-        update_item_task.delay(action, product_id, customer.id)
+        product = Product.objects.get(id=product_id)
+        order, created = Order.objects.get_or_create(customer=customer, complete=False)
+
+        order_item, created = OrderItem.objects.get_or_create(order=order, product=product)
+
+        if action == 'add':
+            if order_item.quantity < product.quantity:
+                order_item.quantity += 1
+            else:
+                messages.error(request, "No more items!")
+        elif action == 'remove':
+            order_item.quantity -= 1
+
+        order_item.save()
+
+        if order_item.quantity == 0:
+            order_item.delete()
 
     return JsonResponse('Item was added', safe=False)
 
 
 def process_order(request):
+    transaction_id = datetime.datetime.now().timestamp()
 
     if request.user.is_authenticated:
         customer = request.user
         data = json.loads(request.body)
         order, created = Order.objects.get_or_create(customer=customer, complete=False)
         total = float(data['form']['total'])
-        transaction_id = datetime.datetime.now().timestamp()
         order.transaction_id = transaction_id
 
         for item in OrderItem.objects.filter(order=order.id):
@@ -175,7 +190,10 @@ def process_order(request):
             zipcode=data['shipping']['zip'],
         )
 
-        generate_sale_reports.delay(order.order_items, data)
+        report = [order.order_items, data['shipping']['address'], data['shipping']['city'], data['shipping']['state'], data['shipping']['zip']]
+        print(report)
+        for i in report[0]:
+            Report.objects.create(vendor=i[3], order_id=i[0], item_name=i[1], quantity=i[2], price=i[4])
 
         messages.success(request, f"Order {order.id} has been made successfully.")
 
