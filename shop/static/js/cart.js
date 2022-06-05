@@ -18,7 +18,7 @@ for (let i = 0; i < updateBtns.length; i++) {
 function updateUserOrder(productId, action) {
     console.log('User is logged in, sending data...')
 
-    let url = 'http://127.0.0.1:8000/update-item/'
+    let url = document.location.origin + '/update-item/'
 
     fetch(url, {
         method: 'POST',
