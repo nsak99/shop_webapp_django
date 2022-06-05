@@ -112,8 +112,10 @@ def vendor(request):
         if request.POST.get('action') == 'edit':
             data = request.POST
             product = Product.objects.get(pk=data["product_id"])
-            product.quantity += int(data["items_added"])
-            product.price = float(data["new_price"])
+            if data["items_added"]:
+                product.quantity += int(data["items_added"])
+            if data["new_price"]:
+                product.price = float(data["new_price"])
             product.save()
         elif request.POST.get('action') == 'add':
             data = request.POST
