@@ -47,7 +47,8 @@
                                                 <div class="modal-dialog modal-lg modal-dialog-centered">
                                                     <div class="modal-content">
                                                         <div class="modal-header">
-                                                            <h5 class="modal-title" id="modal{{ item.id }}label">Edit product</h5>
+                                                            <h5 class="modal-title" id="modal{{ item.id }}label">Edit
+                                                                product</h5>
                                                             <button type="button" class="btn-close"
                                                                     data-bs-dismiss="modal"
                                                                     aria-label="Close"></button>
@@ -155,6 +156,30 @@
                                             </button>
                                         </div>
                                     </form>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Button trigger modal -->
+                        <button type="button" class="btn btn-primary mt-5" data-bs-toggle="modal"
+                                data-bs-target="#reportModal">
+                            Show orders
+                        </button>
+
+                        <!-- Modal -->
+                        <div class="modal fade" id="reportModal" tabindex="-1"
+                             aria-labelledby="reportModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="reportModalLabel">Orders report</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        {% for report in reports %}
+                                            <p><strong>{{ report.order_id }}</strong>. {{ report.item_name }} x {{ report.quantity }} - ${{ report.price }}</p>
+                                        {% endfor %}
+                                    </div>
                                 </div>
                             </div>
                         </div>

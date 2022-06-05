@@ -1,3 +1,4 @@
+from celery import shared_task
 from django.contrib.auth.decorators import login_required, user_passes_test
 from .models import *
 from django.http import JsonResponse
@@ -8,6 +9,7 @@ from .forms import NewUserForm
 from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.forms import AuthenticationForm
+from .tasks import add, generate_sale_reports, update_item_task
 
 
 def login_request(request):
@@ -123,45 +125,32 @@ def vendor(request):
                                              vendor=request.user, quantity=int(data['quantity']))
 
     items = Product.objects.filter(vendor=request.user.id)
-    context = {'items': items, 'cart_items': cart_items}
+    reports = Report.objects.filter(vendor=request.user.username)
+    context = {'items': items, 'cart_items': cart_items, 'reports': reports}
+
     return render(request, 'vendor.html', context=context)
 
 
 def update_item(request):
-    data = json.loads(request.body)
-    product_id = data['productId']
-    action = data['action']
+    if request.body:
+        data = json.loads(request.body)
+        product_id = data['productId']
+        action = data['action']
 
-    customer = request.user
-    product = Product.objects.get(id=product_id)
-    order, created = Order.objects.get_or_create(customer=customer, complete=False)
-
-    order_item, created = OrderItem.objects.get_or_create(order=order, product=product)
-
-    if action == 'add':
-        if order_item.quantity < product.quantity:
-            order_item.quantity += 1
-        else:
-            messages.error(request, "No more items!")
-    elif action == 'remove':
-        order_item.quantity -= 1
-
-    order_item.save()
-
-    if order_item.quantity == 0:
-        order_item.delete()
+        customer = request.user
+        update_item_task.delay(action, product_id, customer.id)
 
     return JsonResponse('Item was added', safe=False)
 
 
 def process_order(request):
-    transaction_id = datetime.datetime.now().timestamp()
 
     if request.user.is_authenticated:
         customer = request.user
         data = json.loads(request.body)
         order, created = Order.objects.get_or_create(customer=customer, complete=False)
         total = float(data['form']['total'])
+        transaction_id = datetime.datetime.now().timestamp()
         order.transaction_id = transaction_id
 
         for item in OrderItem.objects.filter(order=order.id):
@@ -169,7 +158,7 @@ def process_order(request):
             product.quantity -= item.quantity
             product.save()
 
-        order.order_items = [(item.product.name, item.quantity) for item in OrderItem.objects.filter(order=order.id)]
+        order.order_items = [[item.order.id, item.product.name, item.quantity, item.product.vendor.username, item.product.price] for item in OrderItem.objects.filter(order=order.id)]
         order.order_total = total
 
         if total == order.get_cart_total:
@@ -185,6 +174,8 @@ def process_order(request):
             state=data['shipping']['state'],
             zipcode=data['shipping']['zip'],
         )
+
+        generate_sale_reports.delay(order.order_items, data)
 
         messages.success(request, f"Order {order.id} has been made successfully.")
 

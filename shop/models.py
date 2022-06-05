@@ -34,7 +34,7 @@ class Order(models.Model):
         return total
 
     def __str__(self):
-        return self.transaction_id
+        return str(self.id)
 
 
 class OrderItem(models.Model):
@@ -63,3 +63,11 @@ class ShippingAddress(models.Model):
 
     def __str__(self):
         return self.address
+
+
+class Report(models.Model):
+    vendor = models.CharField(max_length=100, null=True)
+    order_id = models.IntegerField(default=0, null=True, blank=True)
+    item_name = models.CharField(max_length=1000, null=True)
+    quantity = models.IntegerField(default=0, null=True, blank=True)
+    price = models.FloatField()
