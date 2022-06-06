@@ -177,7 +177,7 @@
                                     </div>
                                     <div class="modal-body">
                                         {% for report in reports %}
-                                            <p><strong>{{ report.order_id }}</strong>. {{ report.item_name }} x {{ report.quantity }} - ${{ report.price }}</p>
+                                            <p><strong>ID-{{ report.order_id }}</strong>. {{ report.item_name }} x {{ report.quantity }} - ${{ report.price }}</p>
                                         {% endfor %}
                                     </div>
                                 </div>

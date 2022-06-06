@@ -2,13 +2,12 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from .models import *
 from django.http import JsonResponse
 import json
-import datetime
 from django.shortcuts import render, redirect
 from .forms import NewUserForm
 from django.contrib import messages
-from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
-from .tasks import add
+from .tasks import login_authentication_task, get_store_items_task, process_order_task, update_items_task
 
 
 def login_request(request):
@@ -17,7 +16,9 @@ def login_request(request):
         if form.is_valid():
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
-            user = authenticate(username=username, password=password)
+            user_id = login_authentication_task.delay(username, password)
+            print(user_id)
+            user = User.objects.get(id=user_id.get())
             if user is not None:
                 login(request, user)
                 messages.info(request, f"You are now logged in as {username}.")
@@ -53,9 +54,8 @@ def logout_request(request):
 def store(request):
     if request.user.is_authenticated:
         customer = request.user
-        order, created = Order.objects.get_or_create(customer=customer, complete=False)
-        items = order.orderitem_set.all()
-        cart_items = order.get_cart_items
+        cart_items = get_store_items_task.delay(customer.id)
+        cart_items = cart_items.get()
     else:
         items = []
         order = {'get_cart_total': 0, 'get_cart_items': 0}
@@ -137,65 +137,36 @@ def update_item(request):
         action = data['action']
 
         customer = request.user
-        product = Product.objects.get(id=product_id)
-        order, created = Order.objects.get_or_create(customer=customer, complete=False)
-
-        order_item, created = OrderItem.objects.get_or_create(order=order, product=product)
-
-        if action == 'add':
-            if order_item.quantity < product.quantity:
-                order_item.quantity += 1
-            else:
-                messages.error(request, "No more items!")
-        elif action == 'remove':
-            order_item.quantity -= 1
-
-        order_item.save()
-
-        if order_item.quantity == 0:
-            order_item.delete()
+        result = update_items_task.delay(product_id, action, customer.id)
+        if not result.get():
+            messages.error(request, "No more items!")
+        # product = Product.objects.get(id=product_id)
+        # order, created = Order.objects.get_or_create(customer=customer, complete=False)
+        #
+        # order_item, created = OrderItem.objects.get_or_create(order=order, product=product)
+        #
+        # if action == 'add':
+        #     if order_item.quantity < product.quantity:
+        #         order_item.quantity += 1
+        #     else:
+        #         messages.error(request, "No more items!")
+        # elif action == 'remove':
+        #     order_item.quantity -= 1
+        #
+        # order_item.save()
+        #
+        # if order_item.quantity == 0:
+        #     order_item.delete()
 
     return JsonResponse('Item was added', safe=False)
 
 
 def process_order(request):
-    transaction_id = datetime.datetime.now().timestamp()
-
     if request.user.is_authenticated:
         customer = request.user
         data = json.loads(request.body)
-        order, created = Order.objects.get_or_create(customer=customer, complete=False)
-        total = float(data['form']['total'])
-        order.transaction_id = transaction_id
-
-        for item in OrderItem.objects.filter(order=order.id):
-            product = Product.objects.filter(name=item.product.name).get()
-            product.quantity -= item.quantity
-            product.save()
-
-        order.order_items = [[item.order.id, item.product.name, item.quantity, item.product.vendor.username, item.product.price] for item in OrderItem.objects.filter(order=order.id)]
-        order.order_total = total
-
-        if total == order.get_cart_total:
-            order.complete = True
-
-        order.save()
-
-        ShippingAddress.objects.create(
-            customer=customer,
-            order=order,
-            address=data['shipping']['address'],
-            city=data['shipping']['city'],
-            state=data['shipping']['state'],
-            zipcode=data['shipping']['zip'],
-        )
-
-        report = [order.order_items, data['shipping']['address'], data['shipping']['city'], data['shipping']['state'], data['shipping']['zip']]
-        print(report)
-        for i in report[0]:
-            Report.objects.create(vendor=i[3], order_id=i[0], item_name=i[1], quantity=i[2], price=i[4])
-
-        messages.success(request, f"Order {order.id} has been made successfully.")
+        process_order_task.delay(data, customer.id)
+        messages.success(request, f"Order has been made successfully.")
 
     else:
         print("User is not logged in...")
